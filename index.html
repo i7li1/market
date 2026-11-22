@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ماركت فلوجه ستي</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, sans-serif; }
+  body { background:#f4f9f4; color:#1f3b1f; }
+  header {
+    background:linear-gradient(135deg,#1e7d32,#43a047);
+    color:#fff; padding:15px 20px; position:sticky; top:0; z-index:100;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+  }
+  .header-top { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  .logo { font-size:1.5rem; font-weight:bold; }
+  .logo span { color:#c8e6c9; }
+  .cart-btn {
+    background:#fff; color:#1e7d32; border:none; padding:10px 18px;
+    border-radius:25px; font-weight:bold; cursor:pointer; font-size:1rem;
+  }
+  .cart-btn:hover { background:#c8e6c9; }
+  .search-bar { margin-top:12px; }
+  .search-bar input {
+    width:100%; padding:12px 18px; border-radius:25px; border:none;
+    font-size:1rem; outline:none;
+  }
+  .delivery-note {
+    background:#fff3cd; color:#856404; text-align:center; padding:8px;
+    font-size:.95rem; font-weight:bold;
+  }
+  .notice {
+    background:#e8f5e9; border-right:5px solid #43a047; margin:12px;
+    padding:12px 16px; border-radius:8px; font-size:.9rem; color:#2e5c2e;
+  }
+  .notice.warn { background:#fff8e1; border-right-color:#ffa000; color:#7a5c00; }
+  nav.categories {
+    display:flex; gap:8px; overflow-x:auto; padding:12px; background:#fff;
+    border-bottom:1px solid #e0e0e0; position:sticky; top:0; z-index:90;
+  }
+  nav.categories button {
+    white-space:nowrap; padding:8px 16px; border-radius:20px; border:1px solid #43a047;
+    background:#fff; color:#2e7d32; cursor:pointer; font-size:.9rem; font-weight:bold;
+  }
+  nav.categories button.active { background:#43a047; color:#fff; }
+  .section-title {
+    padding:16px 16px 6px; font-size:1.2rem; font-weight:bold; color:#1e7d32;
+    border-bottom:2px solid #c8e6c9; margin:0 12px 8px;
+  }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; padding:8px 16px 24px; }
+  .card {
+    background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08);
+    display:flex; flex-direction:column; transition:transform .15s; border-right:4px solid #43a047;
+  }
+  .card:hover { transform:translateY(-2px); }
+  .card .info { padding:12px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .card .name { font-size:.9rem; font-weight:600; line-height:1.4; flex:1; }
+  .card .price { color:#1e7d32; font-weight:bold; font-size:1.1rem; }
+  .card .add {
+    background:#43a047; color:#fff; border:none; padding:9px; border-radius:8px;
+    cursor:pointer; font-weight:bold; font-size:.85rem;
+  }
+  .card .add:hover { background:#2e7d32; }
+  .cart-panel {
+    position:fixed; top:0; left:-420px; width:400px; max-width:95vw; height:100%;
+    background:#fff; box-shadow:4px 0 20px rgba(0,0,0,.2); z-index:200;
+    display:flex; flex-direction:column; transition:left .3s;
+  }
+  .cart-panel.open { left:0; }
+  .cart-header { background:#1e7d32; color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+  .cart-header button { background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer; }
+  .cart-items { flex:1; overflow-y:auto; padding:12px; }
+  .cart-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:10px 0; gap:8px; }
+  .cart-item .ci-name { flex:1; font-size:.9rem; }
+  .cart-item .ci-price { color:#1e7d32; font-weight:bold; font-size:.85rem; }
+  .qty-controls { display:flex; align-items:center; gap:6px; }
+  .qty-controls button { width:26px; height:26px; border-radius:50%; border:1px solid #43a047; background:#fff; color:#2e7d32; font-weight:bold; cursor:pointer; }
+  .cart-footer { padding:16px; border-top:2px solid #c8e6c9; }
+  .cart-footer .total { font-size:1.2rem; font-weight:bold; margin-bottom:10px; color:#1e7d32; }
+  .cart-footer .order {
+    width:100%; background:#43a047; color:#fff; border:none; padding:14px; border-radius:10px;
+    font-size:1rem; font-weight:bold; cursor:pointer;
+  }
+  .cart-footer .order:hover { background:#2e7d32; }
+  .empty { text-align:center; color:#888; padding:30px 10px; }
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:150; display:none; }
+  .overlay.show { display:block; }
+  footer { background:#1e7d32; color:#fff; text-align:center; padding:20px; font-size:.9rem; margin-top:20px; }
+  footer a { color:#c8e6c9; text-decoration:none; font-weight:bold; }
+  @media(max-width:600px){ .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">ماركت <span>فلوجه ستي</span></div>
+    <button class="cart-btn" onclick="toggleCart()">🛒 السلة (<span id="cartCount">0</span>)</button>
+  </div>
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="🔍 ابحث عن منتج..." oninput="render()">
+  </div>
+</header>
+
+<div class="delivery-note">📞 للتوصيل: 07888300668</div>
+
+<div class="notice">
+  💡 ملاحظة: المنتجات التي سعرها «ثلاث قطع بـ 1000 د.ع» يعني سعر القطعة المفردة 500 د.ع.
+</div>
+<div class="notice warn">
+  ⚠️ ملاحظة: ليست كل المنتجات معروضة بالموقع، باقي المنتجات متوفرة داخل الماركت.
+</div>
+
+<nav class="categories" id="cats"></nav>
+
+<div id="content"></div>
+
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+
+<div class="cart-panel" id="cartPanel">
+  <div class="cart-header">
+    <span>🛒 سلة المشتريات</span>
+    <button onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-footer">
+    <div class="total">المجموع: <span id="cartTotal">0</span> د.ع</div>
+    <button class="order" onclick="sendOrder()">📲 إرسال الطلب عبر واتساب</button>
+  </div>
+</div>
+
+<footer>
+  ماركت فلوجه ستي © 2026<br>
+  📞 <a href="tel:07888300668">07888300668</a> — للطلب والتوصيل
+</footer>
+
+<script>
+/* ======== بيانات المنتجات [الاسم, السعر] ======== */
+const data = {
+  "🥛 الألبان": [
+    ["جبن مثلثات سالم",1000],
+    ["جبن كيري 6 قطع",2750],
+    ["جبن كرافت",4000],
+    ["جبن كرافت علبة",3500],
+    ["جبن انكور كبير",3500],
+    ["جبن انكور صغير",2500],
+    ["جبن المراعي شيشة الصغير",2500],
+    ["جبن شيدر كلا",500],
+    ["جبن كريم كلا",500],
+    ["جبن سليمانية",1250],
+    ["جبن كاله بالقشطة",500],
+    ["جبنتنا",500],
+    ["جبن ويلي كبير",1500],
+    ["جبن شيدر نسر العرب",500],
+    ["جبنة ميلكوم بالقشطة",500],
+    ["لبنيتو نيوبارك زيتون كبير",2500],
+    ["لبنيتو نيوبارك نعناع كبير",2500],
+    ["لبنيتو نيوبارك نعناع صغير",1500],
+    ["لبنة كلا",750],
+    ["لبن اكل قائم صغير",1500],
+    ["لبن اكل راعي",1500],
+    ["لبن اكل جاموس",1000],
+    ["لبن اكل سفن كاله",250],
+    ["لبنة مراعي كركوك",500],
+    ["زبدة اوناي",750],
+    ["زبدة باكو",750],
+    ["قشطة كاله باكيت",1250],
+    ["قشطة كاله علبة",500],
+    ["قيمر كيديدي",750],
+    ["حليب المراعي كبير",2000],
+    ["لبن كركوك",1750],
+    ["لبن كانون سادة",1500],
+    ["لبن كانون ليمون",1500],
+    ["لبن كانون نعناع",1500],
+    ["لبن نسر العرب كبير",1000],
+    ["لبن كانون صغير سادة",250],
+    ["لبن كانون صغير ليمون",250],
+    ["لبن كانون صغير نعناع",250],
+    ["لبن نسر العرب صغير",250],
+    ["حليب ريفال موز",250],
+    ["حليب ريفال شوكولاتة",250],
+    ["حليب ندى موز",250],
+    ["حليب ندى فراولة",250],
+    ["حليب ندى شوكولاتة",250],
+    ["حليب داليا (كاكاو/فراولة)",250],
+    ["حليب كاله كبير كارتون",2000],
+    ["حليب كاله (موز/فراولة/شوكولاتة)",250],
+    ["حليب كاله بطل (قهوة/موز/شوكولاتة)",750],
+    ["حليب كاله بطل (موز/شوكولاتة)",2000],
+    ["حليب ريفال كبير فراولة",2000],
+  ],
+  "🥤 المشروبات": [
+    ["ببسي بطل دبل",1500],
+    ["سفن بطل دبل",1500],
+    ["ميرندا بطل دبل",1500],
+    ["كوكاكولا بطل دبل",1500],
+    ["سبرايت ليمون بطل دبل",1500],
+    ["سبرايت ليمون ونعناع بطل دبل",1500],
+    ["فانتا برتقال بطل دبل",1500],
+    ["فانتا تفاح بطل دبل",1500],
+    ["ببسي بطل",1250],
+    ["سفن بطل",1250],
+    ["ميرندا برتقال بطل",1250],
+    ["ميرندا تفاح بطل",1250],
+    ["فانتا تفاح بطل",1000],
+    ["فانتا برتقال بطل",1000],
+    ["فانتا فواكه بطل",1000],
+    ["كوكاكولا بطل",1000],
+    ["شاني بطل",1500],
+    ["شاني بطل صغير",750],
+    ["سبرايت ليمون ونعناع",1000],
+    ["ببسي بطل صغير",750],
+    ["ديو بطل",750],
+    ["سفن بطل صغير",750],
+    ["سفن ليمون ونعناع بطل",750],
+    ["ميرندا برتقال بطل صغير",750],
+    ["ميرندا تفاح بطل صغير",750],
+    ["شاني بطل صغير 2",750],
+    ["(ببسي/سفن/ديو/ميرندا/شاني/كولا/فانتا/سبرايت) 250مل",250],
+    ["(ببسي/سفن/ميرندا/ديو/شاني/فانتا/سبرايت) 500مل",500],
+    ["قهوة لونا موكا مثلجة",1500],
+    ["قهوة لونا أورجنال مثلجة",1500],
+    ["عصير مهمين / عصير جوقي",250],
+    ["عصير ذوق بطل زجاج",500],
+    ["سينالكو",500],
+    ["أورجنال الصغير",750],
+    ["صودا (ليمون/سادة)",500],
+    ["فيمتو",500],
+    ["تراوبي عنب",500],
+    ["عصير الأغا",500],
+    ["عصير رند",500],
+    ["عصير راني",750],
+    ["استنج",500],
+    ["بربيكان",1000],
+    ["اسبيراش",500],
+    ["مشن",500],
+    ["كازوز",500],
+    ["عصير روعة برتقال",250],
+    ["عصير طازج",250],
+    ["عصير ريو",250],
+    ["عصير منصور سامي",500],
+    ["مشروب طاقة تمساح",500],
+    ["عصير تايم",500],
+    ["عصير فرش",500],
+    ["عصير انجوي",500],
+    ["عصير رند حبيبات",500],
+    ["ماء",250],
+    ["راني بطل كبير",1500],
+    ["ميوز بطل كبير",1500],
+    ["أورجنال بطل كبير",1500],
+    ["عصير فروتي بطل",1000],
+    ["مشروب طاقة روعة",250],
+    ["مشروب طاقة ثري ستارز",500],
+    ["مشروب طاقة الو",500],
+    ["مشروب طاقة ريد سترونج",500],
+    ["مشروب فاير بول",500],
+    ["مشروب طاقة كي ناين",750],
+  ],
+  "🍳 الطبخ": [
+    ["كريم شانتيه",1500],
+    ["نشا ذرة",1500],
+    ["مسحوق كاستر",1500],
+    ["خليط كيك",2000],
+    ["مسحوق كريم كراميل (شوكولاتة/فراولة/كراميل)",1000],
+    ["بهارات كاري كبير",1500],
+    ["ورق غار",1000],
+    ["بطنج",1000],
+    ["حبة حلوة",1000],
+    ["حوائج كليجة",1000],
+    ["بهارات جدر",1000],
+    ["كمون مطحون",1000],
+    ["قرنفل",1000],
+    ["زنجبيل مطحون",1000],
+    ["بهارات مندي دجاج",1000],
+    ["سبع بهارات",1000],
+    ["كبسة لحم",1000],
+    ["هيل",2000],
+    ["بهارات مشكل",1000],
+    ["بهارات دولمة",1000],
+    ["بابريكا حارة",1000],
+    ["هيل مطحون",1000],
+    ["كاري",1000],
+    ["فلفل أسود",1000],
+    ["بهارات طرشي",1000],
+    ["كبابة حب",1000],
+    ["لامندوزي",250],
+    ["صودة طبخ",250],
+    ["فانيلا معلب",1000],
+    ["بيكنغ باودر معلب",1000],
+    ["ماجي دجاج + ماجي بقر (اثنان)",250],
+    ["بيكنغ باودر كيسان (اثنان)",250],
+    ["جوز",1000],
+    ["زعتر حلبي",4000],
+    ["حليب باودر نصف كيلو",3000],
+    ["حليب بودرة انكور",4750],
+    ["حليب مسحوق التونسا",3000],
+    ["حليب مسحوق ديالاك",3500],
+    ["سماق خشن",1000],
+    ["تمن وجبة كيلو",1250],
+    ["تمن في اي بي كيلو",2750],
+    ["تمن جوكر كيلو",2750],
+    ["تمن محمود كيلو",3000],
+    ["تمن محمود 5 كيلو",14000],
+    ["تمن جوكر 5 كيلو",13500],
+    ["تمن في اي بي 5 كيلو",13500],
+    ["تمر هندي",250],
+    ["سمسم 250g",1000],
+    ["نومي بصرة (أسود/أصفر)",1000],
+    ["مبروش ربع كيلو",1500],
+    ["فستق ربع كيلو",1000],
+    ["فاصوليا كيلو",3000],
+    ["حب شمس كيلو",5000],
+    ["جريش كيلو",1500],
+    ["معكرونة كيس صغير",250],
+    ["معكرونة كيس وسط",500],
+    ["معكرونة كيس كبير",1000],
+    ["شعرية كيس صغير",250],
+    ["شعرية كيس وسط",1000],
+    ["سباكيتي كيس صغير",500],
+    ["ملح ناعم",500],
+    ["حمص كياس",1250],
+    ["عدس كياس",1250],
+    ["فاصوليا حمراء",1250],
+    ["فاصوليا خضراء ناعمة",1250],
+    ["جريش كياس",1250],
+    ["طحين فاخر",2500],
+    ["طحين صفر",1500],
+    ["خمرة صغير",1500],
+    ["خمرة كبير",4500],
+    ["قهوة شيشة صغير",1500],
+    ["قهوة كبير تاكسا",8000],
+    ["قهوة برازيلي",2500],
+    ["بن العميد",8750],
+    ["مبيض قهوة محمود",2500],
+    ["نسكافيه",250],
+    ["مربى بأنواعها",1250],
+    ["شوربة التونسا بأنواعها",1000],
+    ["مشروبات بودرة",250],
+    ["زيت طبخ التونسا",3500],
+    ["زيت طبخ الشمس",3000],
+    ["حليب مكثف",1500],
+    ["دبس دبة صغير",2000],
+    ["دبس دبة كبير",3500],
+    ["قشطة لونا",500],
+    ["زيتون معلب",1500],
+    ["حمص معلب",1500],
+    ["لحم لانشون معلب",1500],
+    ["فاصوليا معلب",1500],
+    ["بازلاء معلب",1000],
+    ["فطر معلب",1500],
+    ["بازلاء وجزر",1000],
+    ["لانشون دجاج معلب",1500],
+    ["تونا معلب",1500],
+    ["تونا معلب حارة",1500],
+    ["سردين معلب",1500],
+    ["ورق عنب معلب",1500],
+    ["صلصة بيتزا",1500],
+    ["شطة حارة",1000],
+    ["صلصة فلفل",2000],
+    ["خيار مخلل معلب",2000],
+    ["ذرة حلوة معلبة",1250],
+    ["شاي كيس (محمود/أحمد/جيهان/غزالين)",3000],
+    ["شاي علبة صغير",5000],
+    ["شاي علبة كبير",9500],
+    ["خل بأنواعه",1500],
+    ["زيت الزيتون",2500],
+    ["تمر هندي طبيعي سائل مركز",1500],
+    ["دبس رمان",1500],
+    ["مايونيز تفني",3000],
+    ["كتشب حار",1500],
+    ["شطة فلفل حلو",1500],
+    ["صلصة سلطة فرنسية",1500],
+    ["صاص",1500],
+    ["صلصة باربيكيو",1500],
+    ["مايونيز تونسا",2000],
+    ["كتشب تونسا",2000],
+    ["ليمون حامض",1500],
+  ],
+  "🧼 المنظفات": [
+    ["تايت (تونسا/طوري/فيروز/سوبر وايت) 1.5 كيلو",8500],
+    ["تايت لوتيكس",7500],
+    ["تايت لوتيكس وسط",3500],
+    ["تايت لوتيكس صغير",2000],
+    ["تايت الروى",2000],
+    ["صالون رقي",1000],
+    ["صابون الماس ثلاث قطع",1000],
+    ["صابون فاكس",500],
+    ["صابون روكس",2000],
+    ["صابون دوف",1500],
+    ["صابون جونسون للأطفال",1500],
+    ["صابون نونو",1500],
+    ["صابون دورو",2000],
+    ["كلينكس مطبخ رولة كبير",2000],
+    ["كلوب ورق تواليت",1500],
+    ["كلينكس عادي",1000],
+    ["كلينكس حمام عزل",2500],
+    ["جلافة بايركس",1500],
+    ["فرشاة تنظيف حمامات",1750],
+    ["ماسحة جام",1000],
+    ["أكياس نفايات",2000],
+    ["جلافة سيم",500],
+    ["كفوف غيسل",1000],
+    ["كفوف طبية فريش",6500],
+    ["سيم مواعين",500],
+    ["شامبو ابك",3500],
+    ["شامبو هوبي",3500],
+    ["شامبو دورو",3500],
+    ["شامبو نيروكس",3500],
+    ["مكيف شعر نارا",3500],
+    ["شامبو أطفال تيروز",3000],
+    ["شامبو فازلين",3500],
+    ["شامبو سالي",3500],
+    ["غسول يدين الفال",2500],
+    ["غسول يدين فيفو",2000],
+    ["مطهر ومعقم سارتول",2500],
+    ["معقم الوزير",2000],
+    ["معقم سارتول كبير",3500],
+    ["بودرة أطفال",1500],
+    ["معجون أسنان بأنواعه",2000],
+    ["شيرة سوفت",1000],
+    ["كلينكس مرطب",1000],
+    ["جوليت",1000],
+  ],
+  "🍫 الحلويات": [
+    ["كتكات كبير",1250],
+    ["باونتي",1250],
+    ["كيكة دبي",750],
+    ["توكس",500],
+    ["مارس",500],
+    ["توتكو",500],
+    ["كندر ماكس",500],
+    ["بونوتشي",500],
+    ["سنكرز",500],
+    ["داريلو",500],
+    ["نمبر وان بكل أنواعها (ثلاث قطع)",1000],
+    ["كتكات مني",250],
+    ["شوكليت ستك",250],
+    ["بيتيت بيور ثلاث قطع",1000],
+    ["تورين بار شوكليت",500],
+    ["ويف أب بكل أطعامها ثلاث قطع",1000],
+    ["بوب كيك ثلاث قطع",1000],
+    ["نستله فواكه وشوفان",500],
+    ["مستر بايت بكل أنواعها ثلاث قطع",1000],
+    ["نستله البين ثلاث قطع",1000],
+    ["نستله في اي بي ثلاث قطع",1000],
+    ["توتو",250],
+    ["باب الأغا بكل أطعامها",250],
+  ],
+  "🚬 السجائر": [
+    ["مارلبورو شفل",3000],
+    ["مارلبورو أزرق",2000],
+    ["مارلبورو أبيض",2250],
+    ["مارلبورو ذهبي",3500],
+    ["مارلبورو أسود",3000],
+    ["مارلبورو سلفر",3000],
+    ["ايسي أسود",2000],
+    ["ايسي أزرق قصير",2000],
+    ["ايسي رصاصي",2000],
+    ["ايسي برتقال ونعناع كبسولتين",2000],
+    ["اكتمر",1000],
+    ["كابتن بلاك أزرق",1000],
+    ["امتي أزرق",1000],
+    ["امتي أحمر",1000],
+    ["ايسي أزرق طويل",2000],
+    ["امتي كبسولة",1250],
+    ["سيقارون",1750],
+    ["أوسكار انقليزي",750],
+    ["أوسكار عربي",750],
+    ["أوسكار توت",1250],
+    ["كنت توت",2000],
+    ["كنت رقم أربعة",2000],
+    ["كنت بصمة كبسولة",2750],
+    ["كنت اج دي",2000],
+    ["ديمقراط تفاح",1000],
+    ["ديمقراط عريض كاكاو",1000],
+    ["ديمقراط سلم كاكاو",1000],
+    ["ديمقراط كرز",1000],
+    ["ديمقراط كرز عريض",1000],
+    ["ميلانو",1000],
+    ["كنت وان",1000],
+    ["ماستر",1000],
+    ["اكتمار أبيض",1000],
+    ["ماك عريض",1000],
+    ["ماك رفيع",1000],
+    ["فورمن",1000],
+  ],
+  "🥬 الخضار": [
+    ["تفاح",1500],
+    ["لالنقي",1500],
+    ["رمان",1500],
+    ["برتقال",1500],
+    ["ليمون",1500],
+    ["بتيته",1500],
+    ["ثوم",1000],
+    ["بصل",1500],
+    ["طماطة",1750],
+    ["فلفل أخضر",2000],
+    ["خيار",1250],
+    ["بيذنجان",1250],
+    ["لهانة قطعة واحدة",1500],
+    ["شجر",2000],
+    ["شونذر",750],
+    ["شلغم",750],
+    ["عرانيس (ذرة)",750],
+    ["خس قطعة واحدة",500],
+    ["الخضراوات 15 باقة",1000],
+    ["ريحان باقة واحدة",500],
+    ["جرجير باقة واحدة",500],
+    ["معدنوس باقة واحدة",500],
+  ],
+  "🍟 الشبس": [
+    ["شيتوس فشار بطعم الزبدة",1250],
+    ["شيتوس فشار بطعم جبنة شيدر",1250],
+    ["نى نى بطعم الطماطم",1250],
+    ["ليز بطعم الملح والخل",1250],
+    ["ليز بطعم اللبن والأعشاب",1250],
+    ["ليز بطعم الطماطم",1250],
+    ["ليز الأصلي",1250],
+    ["دوريتوس حار وحلو",1250],
+    ["داليا فستق",1250],
+    ["ليز ماكس نكهة المشاوي",1250],
+    ["ليز ماكس نكهة اللبن والأعشاب",1250],
+    ["دوريتوس حار حلو وسط",500],
+    ["ليز ماكس فلفل حار مكسيكي",500],
+    ["ليز نكهة الكاتشب",500],
+    ["ليز بالملح والخل",500],
+    ["ليز الأصلي",500],
+    ["ليز ماكس جبنة الشيدر",500],
+    ["فشاى أبو جنة",500],
+    ["شبس أبو جنة",250],
+    ["دوريتوس جبنة الناتو",250],
+    ["شيتوس بنكهة الجبنة",250],
+    ["داليا بنكهة البيتزا",250],
+    ["داليا بنكهة الخل",250],
+    ["شبس قوقع",250],
+    ["شبس ستيكس",250],
+    ["شبس تنانين",250],
+    ["شبس مستر جيجي",250],
+    ["شبس باز حلقات",250],
+  ],
+  "👶 الحفاظات": [
+    ["بيبي لوك رقم 1",11500],
+    ["بيبي لوك رقم 2",11500],
+    ["بيبي لوك رقم 3",11500],
+    ["بيبي لوك رقم 4",11500],
+    ["بيبي لوك رقم 5",11500],
+    ["بيبي لوك رقم 6",11500],
+    ["بيبي لوك رقم 7",11500],
+    ["كونفي بريميوم رقم 3",11000],
+    ["كونفي بريميوم رقم 4",11000],
+    ["كونفي بريميوم رقم 6",11000],
+    ["كونفي بريميوم رقم 7",11000],
+    ["كونفي رقم 1",8500],
+    ["كونفي رقم 2",8500],
+    ["كونفي رقم 3",8500],
+    ["كونفي رقم 4",8500],
+    ["كونفي رقم 5",8500],
+    ["بيبي جوي رقم 1",11500],
+    ["بيبي جوي رقم 2",11500],
+    ["بيبي جوي رقم 3",11500],
+    ["بيبي جوي رقم 4",11500],
+    ["بيبي جوي رقم 5",11500],
+    ["بيبي جوي رقم 6",11500],
+    ["تيمو رقم 1",11500],
+    ["تيمو رقم 2",11500],
+    ["تيمو رقم 3",11500],
+    ["تيمو رقم 4",11500],
+    ["تيمو رقم 5",11500],
+  ]
+};
+
+/* ======== حالة السلة ======== */
+let cart = {};
+let activeCat = "all";
+
+/* ======== بناء قائمة التصنيفات ======== */
+function buildCats(){
+  const nav = document.getElementById('cats');
+  const cats = ["all", ...Object.keys(data)];
+  nav.innerHTML = cats.map(c =>
+    `<button class="${c==='all'?'active':''}" onclick="setCat('${c}',this)">${c==='all'?'🏠 الكل':c}</button>`
+  ).join('');
+}
+function setCat(cat, btn){
+  activeCat = cat;
+  document.querySelectorAll('#cats button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+/* ======== عرض المنتجات ======== */
+function render(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const content = document.getElementById('content');
+  let html = '';
+  Object.keys(data).forEach(cat => {
+    if(activeCat !== 'all' && activeCat !== cat) return;
+    const items = data[cat].filter(it => it[0].toLowerCase().includes(q));
+    if(items.length === 0) return;
+
+    if(cat === "🥬 الخضار"){
+      html += `<div class="notice warn">⚠️ ملاحظة: أسعار الخضار غير ثابتة</div>`;
+    }
+    if(cat === "👶 الحفاظات"){
+      html += `<div class="notice">💡 ملاحظة: باقي الحفاظات غير المذكورة تكدر تكتب نوعها بالملاحظات عند إرسال الطلب.</div>`;
+    }
+    html += `<h2 class="section-title">${cat}</h2><div class="grid">`;
+    items.forEach(it => {
+      const [name, price] = it;
+      const safeName = name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      html += `
+        <div class="card">
+          <div class="info">
+            <div class="name">${name}</div>
+            <div class="price">${price.toLocaleString()} د.ع</div>
+            <button class="add" onclick="addToCart('${safeName}',${price})">+ أضف للسلة</button>
+          </div>
+        </div>`;
+    });
+    html += `</div>`;
+  });
+  if(html === '') html = `<div class="empty">🔍 لا توجد منتجات مطابقة</div>`;
+  content.innerHTML = html;
+}
+
+/* ======== السلة ======== */
+function addToCart(name, price){
+  if(cart[name]) cart[name].qty++;
+  else cart[name] = {price, qty:1};
+  updateCart();
+  const btn = document.querySelector('.cart-btn');
+  btn.style.transform = 'scale(1.15)';
+  setTimeout(()=>btn.style.transform='',150);
+}
+function changeQty(name, delta){
+  if(!cart[name]) return;
+  cart[name].qty += delta;
+  if(cart[name].qty <= 0) delete cart[name];
+  updateCart();
+}
+function updateCart(){
+  const itemsEl = document.getElementById('cartItems');
+  const keys = Object.keys(cart);
+  let total = 0, count = 0;
+  if(keys.length === 0){
+    itemsEl.innerHTML = `<div class="empty">🛒 السلة فارغة</div>`;
+  } else {
+    itemsEl.innerHTML = keys.map(k => {
+      const it = cart[k];
+      total += it.price * it.qty;
+      count += it.qty;
+      return `
+        <div class="cart-item">
+          <div class="ci-name">${k}<br><span class="ci-price">${it.price.toLocaleString()} د.ع</span></div>
+          <div class="qty-controls">
+            <button onclick="changeQty('${k.replace(/'/g,"\\'")}',-1)">−</button>
+            <span>${it.qty}</span>
+            <button onclick="changeQty('${k.replace(/'/g,"\\'")}',1)">+</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = total.toLocaleString();
+}
+function toggleCart(){
+  document.getElementById('cartPanel').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+/* ======== إرسال الطلب عبر واتساب ======== */
+function sendOrder(){
+  const keys = Object.keys(cart);
+  if(keys.length === 0){ alert('السلة فارغة!'); return; }
+  let total = 0;
+  let msg = '🛒 *طلب جديد - ماركت فلوجه ستي*\n\n';
+  keys.forEach((k,i)=>{
+    const it = cart[k];
+    const sub = it.price * it.qty;
+    total += sub;
+    msg += `${i+1}. ${k} × ${it.qty} = ${sub.toLocaleString()} د.ع\n`;
+  });
+  msg += `\n💰 *المجموع: ${total.toLocaleString()} د.ع*\n`;
+  msg += `\n📝 ملاحظات إضافية (اكتب هنا أي منتج غير معروض أو تعديل):\n`;
+  const phone = '9647888300668';
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+/* ======== التشغيل ======== */
+buildCats();
+render();
+updateCart();
+</script>
+</body>
+  </html>
