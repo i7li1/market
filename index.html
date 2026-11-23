@@ -7,6 +7,8 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI', Tahoma, sans-serif; }
   body { background:#f4f9f4; color:#1f3b1f; }
+  
+  /* الهيدر */
   header {
     background:linear-gradient(135deg,#1e7d32,#43a047);
     color:#fff; padding:15px 20px; position:sticky; top:0; z-index:100;
@@ -18,6 +20,7 @@
   .cart-btn {
     background:#fff; color:#1e7d32; border:none; padding:10px 18px;
     border-radius:25px; font-weight:bold; cursor:pointer; font-size:1rem;
+    display:flex; align-items:center; gap:8px;
   }
   .cart-btn:hover { background:#c8e6c9; }
   .search-bar { margin-top:12px; }
@@ -34,6 +37,8 @@
     padding:12px 16px; border-radius:8px; font-size:.9rem; color:#2e5c2e;
   }
   .notice.warn { background:#fff8e1; border-right-color:#ffa000; color:#7a5c00; }
+  
+  /* التصنيفات */
   nav.categories {
     display:flex; gap:8px; overflow-x:auto; padding:12px; background:#fff;
     border-bottom:1px solid #e0e0e0; position:sticky; top:0; z-index:90;
@@ -47,6 +52,8 @@
     padding:16px 16px 6px; font-size:1.2rem; font-weight:bold; color:#1e7d32;
     border-bottom:2px solid #c8e6c9; margin:0 12px 8px;
   }
+  
+  /* شبكة المنتجات */
   .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; padding:8px 16px 24px; }
   .card {
     background:#fff; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08);
@@ -61,13 +68,21 @@
     cursor:pointer; font-weight:bold; font-size:.85rem;
   }
   .card .add:hover { background:#2e7d32; }
+
+  /* السلة بالوسط (Popup) */
+  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:150; display:none; opacity:0; transition:opacity .3s; }
+  .overlay.show { display:block; opacity:1; }
+  
   .cart-panel {
-    position:fixed; top:0; left:-420px; width:400px; max-width:95vw; height:100%;
-    background:#fff; box-shadow:4px 0 20px rgba(0,0,0,.2); z-index:200;
-    display:flex; flex-direction:column; transition:left .3s;
+    position:fixed; top:50%; left:50%; transform:translate(-50%, -50%) scale(0.9);
+    width:90%; max-width:450px; max-height:85vh; background:#fff; 
+    box-shadow:0 10px 30px rgba(0,0,0,.3); z-index:200;
+    display:flex; flex-direction:column; border-radius:16px; 
+    opacity:0; pointer-events:none; transition:all .3s ease-in-out;
   }
-  .cart-panel.open { left:0; }
-  .cart-header { background:#1e7d32; color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; }
+  .cart-panel.open { opacity:1; pointer-events:auto; transform:translate(-50%, -50%) scale(1); }
+  
+  .cart-header { background:#1e7d32; color:#fff; padding:16px; display:flex; justify-content:space-between; align-items:center; border-radius:16px 16px 0 0; }
   .cart-header button { background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer; }
   .cart-items { flex:1; overflow-y:auto; padding:12px; }
   .cart-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:10px 0; gap:8px; }
@@ -75,7 +90,7 @@
   .cart-item .ci-price { color:#1e7d32; font-weight:bold; font-size:.85rem; }
   .qty-controls { display:flex; align-items:center; gap:6px; }
   .qty-controls button { width:26px; height:26px; border-radius:50%; border:1px solid #43a047; background:#fff; color:#2e7d32; font-weight:bold; cursor:pointer; }
-  .cart-footer { padding:16px; border-top:2px solid #c8e6c9; }
+  .cart-footer { padding:16px; border-top:2px solid #c8e6c9; border-radius: 0 0 16px 16px; background:#fff;}
   .cart-footer .total { font-size:1.2rem; font-weight:bold; margin-bottom:10px; color:#1e7d32; }
   .cart-footer .order {
     width:100%; background:#43a047; color:#fff; border:none; padding:14px; border-radius:10px;
@@ -83,11 +98,14 @@
   }
   .cart-footer .order:hover { background:#2e7d32; }
   .empty { text-align:center; color:#888; padding:30px 10px; }
-  .overlay { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:150; display:none; }
-  .overlay.show { display:block; }
+  
   footer { background:#1e7d32; color:#fff; text-align:center; padding:20px; font-size:.9rem; margin-top:20px; }
   footer a { color:#c8e6c9; text-decoration:none; font-weight:bold; }
-  @media(max-width:600px){ .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));} }
+  
+  @media(max-width:600px){ 
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
+    .cart-panel { width:95%; max-height:90vh;}
+  }
 </style>
 </head>
 <body>
@@ -95,7 +113,9 @@
 <header>
   <div class="header-top">
     <div class="logo">ماركت <span>فلوجه ستي</span></div>
-    <button class="cart-btn" onclick="toggleCart()">🛒 السلة (<span id="cartCount">0</span>)</button>
+    <button class="cart-btn" onclick="toggleCart()">
+      <span>🛒 السلة</span> (<span id="cartCount">0</span>)
+    </button>
   </div>
   <div class="search-bar">
     <input type="text" id="search" placeholder="🔍 ابحث عن منتج..." oninput="render()">
@@ -188,6 +208,34 @@ const data = {
     ["حليب كاله بطل (قهوة/موز/شوكولاتة)",750],
     ["حليب كاله بطل (موز/شوكولاتة)",2000],
     ["حليب ريفال كبير فراولة",2000],
+  ],
+  "🥩 المجمدات واللحوم": [
+    ["دجاج بوادي 1700 غرام",8500],
+    ["دجاج بوادي 1300 غرام",6500],
+    ["دجاج الريان 1200 غرام",7500],
+    ["لحم مثروم نصف كيلو",5500],
+    ["ناغت دجاج امريكانا",8500],
+    ["برغر لحم بقري جامبو",5000],
+    ["برغر بقري بيت العطا",3500],
+    ["افخاذ دجاج وزن",5000],
+    ["كرسبي دجاج مقرمش",6500],
+    ["صدور دجاج مقرمشة",7500],
+    ["كبة سندويج",4500],
+    ["كبة جريش",2000],
+    ["الستيك الذهبي",2000],
+    ["صدر دجاج ذبح",6000],
+    ["افخاذ دجاج ذبح",5000],
+    ["رقائق بورك مثلثة",2000],
+    ["ستربس دجاج بوادي",11000],
+    ["ناغت دجاج يمين",6500],
+    ["جبن مارغاريتا للبيتزا",1500],
+    ["قطع الدجاج المقرمشة بوادي",5500],
+    ["كولد فود",1000],
+    ["عجينة بقلاوة",2000],
+    ["موزاريلا مرسين",4000],
+    ["صدور الدجاج المقرمشة بيرفكت",3500],
+    ["فنكر وان",2000],
+    ["فنكر نارت",3500],
   ],
   "🥤 المشروبات": [
     ["ببسي بطل دبل",1500],
@@ -382,7 +430,7 @@ const data = {
     ["تايت لوتيكس وسط",3500],
     ["تايت لوتيكس صغير",2000],
     ["تايت الروى",2000],
-    ["صالون رقي",1000],
+    ["صابون رقي",1000],
     ["صابون الماس ثلاث قطع",1000],
     ["صابون فاكس",500],
     ["صابون روكس",2000],
@@ -569,11 +617,9 @@ const data = {
   ]
 };
 
-/* ======== حالة السلة ======== */
 let cart = {};
 let activeCat = "all";
 
-/* ======== بناء قائمة التصنيفات ======== */
 function buildCats(){
   const nav = document.getElementById('cats');
   const cats = ["all", ...Object.keys(data)];
@@ -588,7 +634,6 @@ function setCat(cat, btn){
   render();
 }
 
-/* ======== عرض المنتجات ======== */
 function render(){
   const q = document.getElementById('search').value.trim().toLowerCase();
   const content = document.getElementById('content');
@@ -623,7 +668,6 @@ function render(){
   content.innerHTML = html;
 }
 
-/* ======== السلة ======== */
 function addToCart(name, price){
   if(cart[name]) cart[name].qty++;
   else cart[name] = {price, qty:1};
@@ -668,7 +712,6 @@ function toggleCart(){
   document.getElementById('overlay').classList.toggle('show');
 }
 
-/* ======== إرسال الطلب عبر واتساب ======== */
 function sendOrder(){
   const keys = Object.keys(cart);
   if(keys.length === 0){ alert('السلة فارغة!'); return; }
@@ -686,10 +729,9 @@ function sendOrder(){
   window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
 }
 
-/* ======== التشغيل ======== */
 buildCats();
 render();
 updateCart();
 </script>
 </body>
-  </html>
+</html>
