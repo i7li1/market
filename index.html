@@ -104,7 +104,7 @@
     width: 100%;
     display: flex;
     justify-content: center;
-    pointer-events: none; /* عشان ما يمنع الضغط على الأشياء اللي وراه */
+    pointer-events: none;
   }
   .cart-btn-bottom {
     background: #1e7d32;
@@ -119,7 +119,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    pointer-events: auto; /* نرجعها تشتغل للزر */
+    pointer-events: auto;
   }
   .cart-btn-bottom:hover {
     background: #43a047;
@@ -152,6 +152,9 @@
 </div>
 <div class="notice warn">
   ⚠️ ملاحظة: ليست كل المنتجات معروضة بالموقع، باقي المنتجات متوفرة داخل الماركت.
+</div>
+<div class="notice" style="background:#e3f2fd; border-right-color:#2196f3; color:#1565c0;">
+  📢 ملاحظة مهمة: بعض المواد (خصوصاً الخضار واللحوم) أسعارها غير ثابتة وقد تشهد ارتفاعاً أو انخفاضاً في أي وقت.
 </div>
 
 <nav class="categories" id="cats"></nav>
@@ -703,7 +706,6 @@ function addToCart(name, price){
   else cart[name] = {price, qty:1};
   updateCart();
   
-  // تأثير بسيط على زر السلة
   const btn = document.querySelector('.cart-btn-bottom');
   btn.style.transform = 'scale(1.15)';
   setTimeout(()=>btn.style.transform='',150);
@@ -767,4 +769,4 @@ render();
 updateCart();
 </script>
 </body>
-</html>
+ </html>
